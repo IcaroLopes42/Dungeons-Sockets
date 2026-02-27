@@ -204,7 +204,8 @@ const servidor = net.createServer((socket) => {
             broadcastLobby(`[Lobby] ${apelidoAtual} pegou suas coisas e saiu da Taverna.`);
             delete jogadores[apelidoAtual]; 
         }
-    
+    });
+
     socket.on('error', (err) => {
         console.log(`Erro na conexão com ${apelidoAtual}: ${err.message}`);
     });
