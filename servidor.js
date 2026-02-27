@@ -4,6 +4,14 @@ const jogadores = {};
 
 const timersArena = {}; // Guarda os timeouts de cada partida
 
+function broadcastLobby(mensagem, ignorarApelido = null) {
+    for (const nick in jogadores) {
+        if (jogadores[nick].status === 'livre' && nick !== ignorarApelido) {
+            jogadores[nick].socket.write(`${mensagem}\n`);
+        }
+    }
+}
+
 const servidor = net.createServer((socket) => {
     let apelidoAtual = null;
     
@@ -192,10 +200,10 @@ const servidor = net.createServer((socket) => {
 
     socket.on('end', () => {
         if (apelidoAtual && jogadores[apelidoAtual]) {
-            console.log(`[Desconectou]: ${apelidoAtual} saiu da Taverna.`);
+            console.log(`[Desconectou]: ${apelidoAtual} saiu.`);
+            broadcastLobby(`[Lobby] ${apelidoAtual} pegou suas coisas e saiu da Taverna.`);
             delete jogadores[apelidoAtual]; 
         }
-    });
     
     socket.on('error', (err) => {
         console.log(`Erro na conexão com ${apelidoAtual}: ${err.message}`);
