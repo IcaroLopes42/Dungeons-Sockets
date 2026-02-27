@@ -34,10 +34,17 @@ const servidor = net.createServer((socket) => {
                     case 'REGISTRAR':
                         apelidoAtual = partes[1];
                         const classe = partes[2];
+
+                        if (jogadores[apelidoAtual]) {
+                            socket.write('Servidor: Esse nome já está em uso na Taverna.\n');
+                            break;
+                        }
                         
-                        let hpBase = 20; // hp base ladino
-                        if (classe === 'Clerigo') hpBase = 30;
-                        if (classe === 'Bruxo') hpBase = 25;
+                        const classeFormatada = classe.toUpperCase();
+
+                        let hpBase = 20; // Ladino ou padrão
+                        if (classeFormatada === 'CLERIGO') hpBase = 30;
+                        if (classeFormatada === 'BRUXO') hpBase = 25;
 
                         jogadores[apelidoAtual] = {
                             socket: socket,
@@ -144,7 +151,7 @@ const servidor = net.createServer((socket) => {
                         oponentePersonagem.hp -= dano;
 
                         // Envia o resultado para os dois
-                        const resumo = `${msgAcao}\nHP de ${oponentePersonagem.oponente}: ${oponentePersonagem.hp}`;
+                        const resumo = `${msgAcao}\nHP de ${meuPersonagem.oponente}: ${oponentePersonagem.hp}`;
                         socket.write(resumo + '\n');
                         oponentePersonagem.socket.write(resumo + '\n');
 
