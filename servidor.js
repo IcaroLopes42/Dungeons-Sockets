@@ -35,7 +35,7 @@ const servidor = net.createServer((socket) => {
                         apelidoAtual = partes[1];
                         const classe = partes[2];
                         
-                        let hpBase = 20; 
+                        let hpBase = 20; // hp base ladino
                         if (classe === 'Clerigo') hpBase = 30;
                         if (classe === 'Bruxo') hpBase = 25;
 
