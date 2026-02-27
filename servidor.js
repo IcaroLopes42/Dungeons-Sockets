@@ -2,6 +2,8 @@ const net = require('net');
 
 const jogadores = {};
 
+const timersArena = {}; // Guarda os timeouts de cada partida
+
 const servidor = net.createServer((socket) => {
     let apelidoAtual = null;
     
@@ -54,6 +56,122 @@ const servidor = net.createServer((socket) => {
                             socket.write(`Servidor: A Taverna esta vazia.\n`);
                         } else {
                             socket.write(`Servidor: Jogadores online -> ${online.join(', ')}\n`);
+                        }
+                        break;
+
+                    case 'DESAFIAR':
+                        if (!apelidoAtual) break;
+                        const inimigo = partes[1];
+
+                        if (!jogadores[inimigo] || jogadores[inimigo].status !== 'livre') {
+                            socket.write('Servidor: Jogador indisponível ou inexistente.\n');
+                            break;
+                        }
+
+                        // Coloca o desafio em espera
+                        socket.write(`Servidor: Desafio enviado a ${inimigo}. A aguardar resposta...\n`);
+                        jogadores[inimigo].socket.write(`[Sistema] ${apelidoAtual} desafiou-o para um combate! Digite: aceitar ${apelidoAtual}\n`);
+                        break;
+
+                    case 'ACEITAR':
+                        if (!apelidoAtual) break;
+                        const desafiante = partes[1];
+
+                        if (!jogadores[desafiante] || jogadores[desafiante].status !== 'livre') {
+                            socket.write('Servidor: O desafiante já não está disponível.\n');
+                            break;
+                        }
+
+                        // Inicia o combate
+                        jogadores[apelidoAtual].status = 'em_jogo';
+                        jogadores[apelidoAtual].oponente = desafiante;
+                        
+                        jogadores[desafiante].status = 'em_jogo';
+                        jogadores[desafiante].oponente = apelidoAtual;
+
+                        // Define quem começa (o desafiante)
+                        jogadores[desafiante].turno = true;
+                        jogadores[apelidoAtual].turno = false;
+
+                        const msgInicio = `\n⚔️ A ARENA FOI ABERTA! ${desafiante} VS ${apelidoAtual} ⚔️\n`;
+                        jogadores[desafiante].socket.write(msgInicio + `É a sua vez, ${desafiante}! Tem 15 segundos para usar /atacar ou /especial.\n`);
+                        socket.write(msgInicio + `Aguarde o turno de ${desafiante}.\n`);
+
+                        // Inicia o temporizador de 15 segundos para o K.O.
+                        iniciarTimeoutTurno(desafiante, apelidoAtual);
+                        break;
+
+                    case 'ACAO':
+                        if (!apelidoAtual || jogadores[apelidoAtual].status !== 'em_jogo') break;
+                        
+                        const meuPersonagem = jogadores[apelidoAtual];
+                        const oponentePersonagem = jogadores[meuPersonagem.oponente];
+
+                        if (!meuPersonagem.turno) {
+                            socket.write('Servidor: Não é o seu turno! Aguarde.\n');
+                            break;
+                        }
+
+                        // Llimpa o temporizador de K.O.
+                        clearTimeout(timersArena[apelidoAtual]);
+
+                        const tipoAcao = partes[1].toUpperCase(); // ATACAR ou ESPECIAL
+                        let dano = 0;
+                        let msgAcao = "";
+
+                        if (tipoAcao === 'ATACAR') {
+                            if (meuPersonagem.classe === 'Ladino') {
+                                dano = Math.floor(Math.random() * 10) + 1; // 1d10
+                            } else if (meuPersonagem.classe === 'Bruxo') {
+                                dano = Math.floor(Math.random() * 8) + 1; // 1d8
+                            } else { // Clerigo
+                                dano = Math.floor(Math.random() * 6) + 1; // 1d6
+                            }
+                            msgAcao = `[Arena] ${apelidoAtual} atacou e causou ${dano} de dano!`;
+                        } else if (tipoAcao === 'ESPECIAL') {
+                             if (meuPersonagem.classe === 'Ladino') {
+                                dano = Math.floor(Math.random() * 12) + 1; // 1d12
+                            } else if (meuPersonagem.classe === 'Bruxo') {
+                                dano = Math.floor(Math.random() * 10) + 1; // 1d10
+                            } else { // Clerigo
+                                dano = Math.floor(Math.random() * 8) + 1; // 1d8
+                            }
+                            msgAcao = `[Arena] ${apelidoAtual} usou o especial e causou ${dano} de dano!`;
+                        }
+
+                        // Aplica o dano
+                        oponentePersonagem.hp -= dano;
+
+                        // Envia o resultado para os dois
+                        const resumo = `${msgAcao}\nHP de ${oponentePersonagem.oponente}: ${oponentePersonagem.hp}`;
+                        socket.write(resumo + '\n');
+                        oponentePersonagem.socket.write(resumo + '\n');
+
+                        // Verifica Condição de Vitória
+                        if (oponentePersonagem.hp <= 0) {
+                            socket.write(`🏆 VITÓRIA! Derrotou ${meuPersonagem.oponente}!\n`);
+                            oponentePersonagem.socket.write(`💀 FOI DERROTADO por ${apelidoAtual}!\n`);
+                            
+                            // Reseta os status e HP 
+                            meuPersonagem.status = 'livre';
+                            meuPersonagem.oponente = null;
+                            meuPersonagem.hp = meuPersonagem.classe === 'Clerigo' ? 30 : (meuPersonagem.classe === 'Bruxo' ? 25 : 20);
+
+                            oponentePersonagem.status = 'livre';
+                            oponentePersonagem.oponente = null;
+                            oponentePersonagem.hp = oponentePersonagem.classe === 'Clerigo' ? 30 : (oponentePersonagem.classe === 'Bruxo' ? 25 : 20);
+                            
+                            broadcastLobby(`[Lobby] O combate terminou! ${apelidoAtual} venceu a batalha na Arena.`);
+                        } else {
+                            // Troca o turno
+                            meuPersonagem.turno = false;
+                            oponentePersonagem.turno = true;
+
+                            oponentePersonagem.socket.write(`\nÉ a sua vez, ${meuPersonagem.oponente}! Tem 15 segundos para usar /atacar ou /especial.\n`);
+                            socket.write(`\nAguarde o turno de ${meuPersonagem.oponente}.\n`);
+
+                            // Inicia o temporizador para o próximo jogador
+                            iniciarTimeoutTurno(meuPersonagem.oponente, apelidoAtual);
                         }
                         break;
                     
