@@ -57,13 +57,13 @@ Cheklist de implementação
 
 O servidor deverá:
 
-    1. Aceitar conexões simultâneas de múltiplos clientes;    
+    1. Aceitar conexões simultâneas de múltiplos clientes   Feito!
 
-    2. Receber de cada cliente, no momento do registro: um apelido (nickname);     
+    2. Receber de cada cliente, no momento do registro: um apelido (nickname);  Feito!
 
-    3. Manter uma lista atualizada de usuários conectados;        
+    3. Manter uma lista atualizada de usuários conectados;  Feito!        
 
-    4. Disponibilizar essa lista aos clientes sempre que solicitada;        
+    4. Disponibilizar essa lista aos clientes sempre que solicitada;    Feito!        
 
     5. Detectar e tratar desconexões de clientes.                                                                       
                                                                                                                        
@@ -71,17 +71,17 @@ Funcionamento do cliente
 
 Ao iniciar a aplicação, o cliente deverá:       
                                                              
-1. Conectar-se ao servidor central;         
+1. Conectar-se ao servidor central; Feito!         
 
-2. Registrar seu apelido;  
+2. Registrar seu apelido;   Feito!  
 
-3. Solicitar e exibir a lista de usuários disponíveis;        
+3. Solicitar e exibir a lista de usuários disponíveis;  Feito!        
 
 4. Permitir ao usuário:       
 
      atualizar a lista de participantes;             
 
-     selecionar outro usuário para iniciar comunicação.            
+     selecionar outro usuário para iniciar comunicação.    Feito!            
 
 
 A comunicação entre dois clientes ocorre diretamente, após a obtenção das informações necessárias junto ao servidor.    
