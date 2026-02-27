@@ -56,6 +56,7 @@ const servidor = net.createServer((socket) => {
                             socket.write(`Servidor: A Taverna esta vazia.\n`);
                         } else {
                             socket.write(`Servidor: Jogadores online -> ${online.join(', ')}\n`);
+                            socket.write(`Caso queira desafiar algum jogador digite: desafiar|Nickname`)
                         }
                         break;
 
@@ -70,7 +71,7 @@ const servidor = net.createServer((socket) => {
 
                         // Coloca o desafio em espera
                         socket.write(`Servidor: Desafio enviado a ${inimigo}. A aguardar resposta...\n`);
-                        jogadores[inimigo].socket.write(`[Sistema] ${apelidoAtual} desafiou-o para um combate! Digite: aceitar ${apelidoAtual}\n`);
+                        jogadores[inimigo].socket.write(`[Sistema] ${apelidoAtual} desafiou-o para um combate! Digite: aceitar|${apelidoAtual}\n`);
                         break;
 
                     case 'ACEITAR':
@@ -193,6 +194,39 @@ const servidor = net.createServer((socket) => {
         console.log(`Erro na conexão com ${apelidoAtual}: ${err.message}`);
     });
 });
+
+// Função que controla o tempo limite de jogada
+function iniciarTimeoutTurno(jogadorVez, jogadorEspera) {
+    // Se já houver um timer a correr, limpa-o
+    if (timersArena[jogadorVez]) {
+        clearTimeout(timersArena[jogadorVez]);
+    }
+
+    timersArena[jogadorVez] = setTimeout(() => {
+        const charVez = jogadores[jogadorVez];
+        const charEspera = jogadores[jogadorEspera];
+
+        if (charVez && charEspera && charVez.status === 'em_jogo') {
+            // O tempo da rodada esgotou
+            const msgKO = `⏳ TEMPO ESGOTADO! ${jogadorVez} ficou inativo e perdeu por K.O. Técnico!`;
+            charVez.socket.write(msgKO + '\n');
+            charEspera.socket.write(msgKO + '\n🏆 VITÓRIA!\n');
+
+            // Limpa o estado da arena
+            charVez.status = 'livre';
+            charVez.oponente = null;
+            charVez.turno = false;
+
+            charEspera.status = 'livre';
+            charEspera.oponente = null;
+            charEspera.turno = false;
+            
+            // Restaura HPs
+            charVez.hp = 20; 
+            charEspera.hp = 20;
+        }
+    }, 15000); // 15 segundos
+}
 
 servidor.listen(666, () => {
     console.log('=========================================');
