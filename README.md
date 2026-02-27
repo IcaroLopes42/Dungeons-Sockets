@@ -4,6 +4,7 @@ Durante o curso de Redes de Computadores na UFOP o nosso professor pediu para cr
 E cá estamos com Dungeons&Sockets (não sou bom com nomes kkkkkkk)
 
 Projeto:
+Linguagem escolhida: Node.js
 Sistema P2P (peer-to-peer) para o chat e arquitetura híbrida de Cliente/Servidor para validação! Então precisamos dividir em duas fontes
 
 1- O servidor 
@@ -17,6 +18,7 @@ Sistema P2P (peer-to-peer) para o chat e arquitetura híbrida de Cliente/Servido
 REGRAS ESPECÍFICAS
 
 Chat
+
      Ao receber uma solicitação de comunicação, uma nova janela ou sessão de chat deverá ser
     aberta automaticamente;
 
@@ -80,8 +82,8 @@ Ao iniciar a aplicação, o cliente deverá:
      atualizar a lista de participantes;             
 
      selecionar outro usuário para iniciar comunicação.            
-    
-                                                        
+
+
 A comunicação entre dois clientes ocorre diretamente, após a obtenção das informações necessárias junto ao servidor.    
 
 
