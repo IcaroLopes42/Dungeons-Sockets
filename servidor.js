@@ -71,7 +71,7 @@ const servidor = net.createServer((socket) => {
                             socket.write(`Servidor: A Taverna esta vazia.\n`);
                         } else {
                             socket.write(`Servidor: Jogadores online -> ${online.join(', ')}\n`);
-                            socket.write(`Caso queira desafiar algum jogador digite: desafiar|Nickname`)
+                            socket.write(`Caso queira desafiar algum jogador digite: /desafiar Nickname`)
                         }
                         break;
 
@@ -86,7 +86,7 @@ const servidor = net.createServer((socket) => {
 
                         // Coloca o desafio em espera
                         socket.write(`Servidor: Desafio enviado a ${inimigo}. A aguardar resposta...\n`);
-                        jogadores[inimigo].socket.write(`[Sistema] ${apelidoAtual} desafiou-o para um combate! Digite: aceitar|${apelidoAtual}\n`);
+                        jogadores[inimigo].socket.write(`[Sistema] ${apelidoAtual} desafiou-o para um combate! Digite: /aceitar ${apelidoAtual}\n`);
                         break;
 
                     case 'ACEITAR':
